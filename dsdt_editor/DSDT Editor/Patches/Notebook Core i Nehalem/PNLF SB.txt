@@ -1,0 +1,10 @@
+into scope label _SB insert
+begin
+Device (PNLF)\n
+{\n
+	Name (_HID, EisaId ("APP0002"))\n
+	Name (_CID, "backlight")\n
+	Name (_UID, 0x0A)\n
+	Name (_STA, 0x0B)\n
+}
+end

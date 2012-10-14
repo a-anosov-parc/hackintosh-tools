@@ -1,0 +1,14 @@
+into method label _DSM parent_adr 0x001F0003 remove_entry;
+into device name_adr 0x001F0003 insert
+begin
+Device (BUS0)\n
+{\n
+Name (_CID, "smbus")\n
+Name (_ADR, Zero)\n
+Device (DVL0)\n
+{\n
+Name (_ADR, 0x57)\n
+Name (_CID, "diagsvault")\n
+}\n
+}
+end

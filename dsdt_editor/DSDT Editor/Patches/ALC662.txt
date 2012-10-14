@@ -1,0 +1,38 @@
+# Insert method _DSM into device with _ADR 0x001B0000
+#
+into method label _DSM parent_adr 0x001B0000 remove_entry;
+into device name_adr 0x001B0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x08)\n
+        {\n
+            "codec-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x62, 0x06, 0xEC, 0x10\n
+            }, \n
+            "layout-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x96, 0x02, 0x00, 0x00\n
+            }, \n
+            "device-type", \n
+            Buffer (0x11)\n
+            {\n
+                "ALC662"\n
+            }, \n
+            "PinConfigurations", \n
+            Buffer (0x28)\n
+            {\n
+                /* 0000 */    0x01, 0x90, 0x02, 0x01, 0x02, 0x01, 0x10, 0x40, \n
+                /* 0008 */    0x11, 0x01, 0x20, 0x90, 0xA1, 0x90, 0x60, 0x90, \n
+                /* 0010 */    0xA1, 0x02, 0x40, 0x30, 0x81, 0x01, 0x50, 0x40, \n
+                /* 0018 */    0x21, 0x02, 0x30, 0x61, 0x4B, 0x01, 0x18, 0x19, \n
+                /* 0020 */    0x1A, 0x1B, 0x1C, 0x1D, 0x14, 0x15, 0x16, 0x0B\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end

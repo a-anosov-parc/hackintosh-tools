@@ -1,0 +1,1 @@
+into definitionblock code_regex External\s\(\\TNOT\) remove_matched

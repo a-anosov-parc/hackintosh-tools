@@ -1,0 +1,363 @@
+# All patches used in ASUS P5E (also tested on P5E Deluxe, P5K Premium and Maximus Formula)
+#
+into method label _CST parent_label CPU1 remove_entry;
+into processor label CPU1 insert
+begin
+Method (_CST, 0, NotSerialized)\n
+{\n
+    If (LAnd (And (CFGD, 0x01000000), LNot (And (TYPE, 0x10\n
+        ))))\n
+    {\n
+        Return (Package (0x02)\n
+        {\n
+            One, \n
+            Package (0x04)\n
+            {\n
+                ResourceTemplate ()\n
+                {\n
+                    Register (FFixedHW, \n
+                        0x00,               // Bit Width\n
+                        0x00,               // Bit Offset\n
+                        0x0000000000000000, // Address\n
+                        ,)\n
+                }, \n
+                One, \n
+                0x9D, \n
+                0x03E8\n
+            }\n
+        })\n
+    }\n
+    If (And (TYPE, 0x0300))\n
+    {\n
+        If (And (CFGD, 0x20))\n
+        {\n
+            Return (Package (0x03)\n
+            {\n
+                0x02, \n
+                Package (0x04)\n
+                {\n
+                    ResourceTemplate ()\n
+                    {\n
+                        Register (FFixedHW, \n
+                            0x01,               // Bit Width\n
+                            0x02,               // Bit Offset\n
+                            0x0000000000000000, // Address\n
+                            ,)\n
+                    }, \n
+                    One, \n
+                    One, \n
+                    0x03E8\n
+                }, \n
+                Package (0x04)\n
+                {\n
+                    ResourceTemplate ()\n
+                    {\n
+                        Register (FFixedHW, \n
+                            0x01,               // Bit Width\n
+                            0x02,               // Bit Offset\n
+                            0x0000000000000010, // Address\n
+                            ,)\n
+                    }, \n
+                    0x02, \n
+                    One, \n
+                    0x01F4\n
+                }\n
+            })\n
+        }\n
+    }\n
+    If (And (CFGD, 0x20))\n
+    {\n
+        Return (Package (0x03)\n
+        {\n
+            0x02, \n
+            Package (0x04)\n
+            {\n
+                ResourceTemplate ()\n
+                {\n
+                    Register (FFixedHW, \n
+                        0x01,               // Bit Width\n
+                        0x02,               // Bit Offset\n
+                        0x0000000000000000, // Address\n
+                        ,)\n
+                }, \n
+                One, \n
+                One, \n
+                0x03E8\n
+            }, \n
+            Package (0x04)\n
+            {\n
+                ResourceTemplate ()\n
+                {\n
+                    Register (SystemIO, \n
+                        0x08,               // Bit Width\n
+                        0x00,               // Bit Offset\n
+                        0x000000000000000C, // Address\n
+                        ,)\n
+                }, \n
+                0x02, \n
+                One, \n
+                0x01F4\n
+            }\n
+        })\n
+    }\n
+    Return (Package (0x02)\n
+    {\n
+        One, \n
+        Package (0x04)\n
+        {\n
+            ResourceTemplate ()\n
+            {\n
+                Register (FFixedHW, \n
+                    0x01,               // Bit Width\n
+                    0x02,               // Bit Offset\n
+                    0x0000000000000000, // Address\n
+                    ,)\n
+            }, \n
+            One, \n
+            One, \n
+            0x03E8\n
+        }\n
+    })\n
+}
+end;
+into method label _CST parent_label CPU2 remove_entry;
+into processor label CPU2 insert
+begin
+Method (_CST, 0, NotSerialized)\n
+{\n
+    Return (^^CPU1._CST ())\n
+}
+end;
+into method label _CST parent_label CPU3 remove_entry;
+into processor label CPU3 insert
+begin
+Method (_CST, 0, NotSerialized)\n
+{\n
+    Return (^^CPU1._CST ())\n
+}
+end;
+into method label _CST parent_label CPU4 remove_entry;
+into processor label CPU4 insert
+begin
+Method (_CST, 0, NotSerialized)\n
+{\n
+    Return (^^CPU1._CST ())\n
+}
+end;
+into device name_hid PNP0000 code_regex IRQNoFlags\s\(\)\n\s+\{(\d+)\} remove_matched;
+into device name_hid PNP0100 code_regex IRQNoFlags\s\(\)\n\s+\{(\d+)\} store_%8;
+into device name_hid PNP0100 code_regex IRQNoFlags\s\(\)\n\s+\{(\d+)\} remove_matched;
+into device name_hid PNP0B00 code_regex IRQNoFlags\s\(\)\n\s+\{(\d+)\} store_%9;
+into device name_hid PNP0B00 code_regex IRQNoFlags\s\(\)\n\s+\{(\d+)\} remove_matched;
+into device name_hid PNP0103 code_regex_not IRQNoFlags code_regex Name\s\(([^,]+),\sResourceTemplate\s\(\)\n\s+\{((?:.|\n)*)\}\) replace_matched
+begin
+Name (%1, ResourceTemplate ()\n
+                    {\n
+                        IRQNoFlags ()\n
+                            {%8}\n
+                        IRQNoFlags ()\n
+                            {%9}\n
+%2
+})
+end;
+into method label _DSM parent_adr 0x001D0000 remove_entry;
+into device name_adr 0x001D0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x34, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001D0001 remove_entry;
+into device name_adr 0x001D0001 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x35, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001D0002 remove_entry;
+into device name_adr 0x001D0002 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x36, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001A0000 remove_entry;
+into device name_adr 0x001A0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x37, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001A0001 remove_entry;
+into device name_adr 0x001A0001 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x38, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001A0002 remove_entry;
+into device name_adr 0x001A0002 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x39, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into device name_adr 0x001B0000 parent_hid PNP0A08 remove_entry;
+into device name_hid PNP0A08 insert
+begin
+Device (HDEF)\n
+{\n
+    Name (_ADR, 0x001B0000)\n
+    Method (_DSM, 4, NotSerialized)\n
+    {\n
+        Store (Package (0x08)\n
+            {\n
+                "codec-id", \n
+                Buffer (0x04)\n
+                {\n
+                    0x9B, 0x82, 0x43, 0x10\n
+                }, \n
+                "layout-id", \n
+                Buffer (0x04)\n
+                {\n
+                    0x0C, 0x00, 0x00, 0x00\n
+                }, \n
+                "device-type", \n
+                Buffer (0x17)\n
+                {\n
+                    "Analog Devices AD1988B"\n
+                }, \n
+                "PinConfigurations", \n
+                Buffer (0x24)\n
+                {\n
+                    /* 0000 */    0x30, 0x40, 0x21, 0x01, 0x10, 0x40, 0x11, 0x01, \n
+                    /* 0008 */    0x40, 0x90, 0xA1, 0x01, 0x50, 0x30, 0x81, 0x01, \n
+                    /* 0010 */    0x60, 0x10, 0x01, 0x01, 0x20, 0x90, 0xA0, 0x90, \n
+                    /* 0018 */    0x80, 0xF1, 0x45, 0x01, 0x90, 0xF1, 0xC5, 0x01, \n
+                    /* 0020 */    0x70, 0x60, 0x01, 0x01\n
+                }\n
+            }, Local0)\n
+        DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+        Return (Local0)\n
+    }\n
+}
+end;
+into method label _DSM parent_adr 0x001F0002 remove_entry;
+into device name_adr 0x001F0002 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x81, 0x26, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _PTS code_regex_not LEqual\s\(Arg0,\s0x05\) code_regex ^((?:.|\n)*)$ replace_matched
+begin
+        If (LEqual (Arg0, 0x05)) {}\n
+        Else\n
+        {\n
+%1
+        }
+end;
+into method label DTGP remove_entry;
+into definitionblock code_regex . insert
+begin
+Method (DTGP, 5, NotSerialized)\n
+{\n
+    If (LEqual (Arg0, Buffer (0x10)\n
+            {\n
+                /* 0000 */    0xC6, 0xB7, 0xB5, 0xA0, 0x18, 0x13, 0x1C, 0x44, \n
+                /* 0008 */    0xB0, 0xC9, 0xFE, 0x69, 0x5E, 0xAF, 0x94, 0x9B\n
+            }))\n
+    {\n
+        If (LEqual (Arg1, One))\n
+        {\n
+            If (LEqual (Arg2, Zero))\n
+            {\n
+                Store (Buffer (One)\n
+                    {\n
+                        0x03\n
+                    }, Arg4)\n
+                Return (One)\n
+            }\n
+            If (LEqual (Arg2, One))\n
+            {\n
+                Return (One)\n
+            }\n
+        }\n
+    }\n
+    Store (Buffer (One)\n
+        {\n
+            0x00\n
+        }, Arg4)\n
+    Return (Zero)\n
+}
+end

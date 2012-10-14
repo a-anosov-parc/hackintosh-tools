@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
+<plist version="0.9">
+<dict>
+	<key>CFBundleName</key>
+	<string>DSDT Editor</string>
+	<key>CFBundleIdentifier</key>
+	<string>dsdtparser.DSDTParserApp</string>
+	<key>CFBundleVersion</key>
+	<string>0.8</string>
+	<key>CFBundleAllowMixedLocalizations</key>
+	<string>true</string>
+	<key>CFBundleExecutable</key>
+	<string>JavaApplicationStub</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleGetInfoString</key>
+	<string>DSDT Editor</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleIconFile</key>
+	<string>text-x-patch.icns</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Acpicode/dsl</string>
+			<key>CFBundleTypeIconFile</key>
+			<string>text-x-patch.icns</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>dsl </string>
+			</array>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>dsl</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Acpicode/aml</string>
+			<key>CFBundleTypeIconFile</key>
+			<string>text-x-patch.icns</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>aml </string>
+			</array>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>aml</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
+	</array>
+	<key>Java</key>
+	<dict>
+		<key>WorkingDirectory</key>
+		<string>$APP_PACKAGE/Contents/Resources/Java</string>
+		<key>MainClass</key>
+		<string>dsdtparser.DSDTParserApp</string>
+		<key>JVMVersion</key>
+		<string>1.6+</string>
+		<key>ClassPath</key>
+			<array>
+			<string>$JAVAROOT/DSDTParser.jar</string>
+			<string>$JAVAROOT/appframework-1.0.3.jar</string>
+			<string>$JAVAROOT/jsyntaxpane-0.9.6.jar</string>
+			<string>$JAVAROOT/swing-worker-1.1.jar</string>
+			</array>
+	</dict>
+</dict>
+</plist>

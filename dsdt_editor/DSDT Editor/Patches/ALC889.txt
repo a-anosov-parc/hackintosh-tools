@@ -1,0 +1,38 @@
+# Insert method _DSM into device with _ADR 0x001B0000
+#
+into method label _DSM parent_adr 0x001B0000 remove_entry;
+into device name_adr 0x001B0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x08)\n
+        {\n
+            "codec-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x89, 0x08, 0xEC, 0x10\n
+            }, \n
+            "layout-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x79, 0x03, 0x00, 0x00\n
+            }, \n
+            "device-type", \n
+            Buffer (0x0F)\n
+            {\n
+                "Realtek ALC889"\n
+            }, \n
+            "PinConfigurations", \n
+            Buffer (0x28)\n
+            {\n
+                /* 0000 */    0x10, 0x90, 0xA0, 0x90, 0x20, 0x90, 0xA1, 0x02, \n
+                /* 0008 */    0x80, 0x30, 0x81, 0x01, 0x90, 0x40, 0x21, 0x02, \n
+                /* 0010 */    0x30, 0x40, 0x11, 0x01, 0x40, 0x10, 0x01, 0x01, \n
+                /* 0018 */    0x50, 0x60, 0x01, 0x01, 0x60, 0x20, 0x01, 0x01, \n
+                /* 0020 */    0x70, 0x61, 0x4B, 0x01, 0xA0, 0x01, 0xCB, 0x01\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end

@@ -1,0 +1,497 @@
+# Add method DTGP to the main block, it's used by other patches
+#
+into method label DTGP remove_entry;
+into definitionblock code_regex . insert
+begin
+Method (DTGP, 5, NotSerialized)\n
+{\n
+    If (LEqual (Arg0, Buffer (0x10)\n
+            {\n
+                /* 0000 */    0xC6, 0xB7, 0xB5, 0xA0, 0x18, 0x13, 0x1C, 0x44, \n
+                /* 0008 */    0xB0, 0xC9, 0xFE, 0x69, 0x5E, 0xAF, 0x94, 0x9B\n
+            }))\n
+    {\n
+        If (LEqual (Arg1, One))\n
+        {\n
+            If (LEqual (Arg2, Zero))\n
+            {\n
+                Store (Buffer (One)\n
+                    {\n
+                        0x03\n
+                    }, Arg4)\n
+                Return (One)\n
+            }\n
+            If (LEqual (Arg2, One))\n
+            {\n
+                Return (One)\n
+            }\n
+        }\n
+    }\n
+    Store (Buffer (One)\n
+        {\n
+            0x00\n
+        }, Arg4)\n
+    Return (Zero)\n
+}
+end;
+# Change ID of SATA device to fake ESB2 AHCI (silver icons for internal HDs instead of orange ones)
+#
+into method label _DSM parent_adr 0x001F0002 remove_entry;
+into device name_adr 0x001F0002 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x81, 0x26, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+# Rename device AZAL to HDEF and change all references to it
+#
+into device name_adr 0x001B0000 set_label
+begin
+HDEF
+end;
+into_all all code_regex AZAL replaceall_matched
+begin
+HDEF
+end;
+# Insert method _DSM into device with _ADR 0x001B0000
+#
+into method label _DSM parent_adr 0x001B0000 remove_entry;
+into device name_adr 0x001B0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x0A)\n
+        {\n
+            "built-in",\n
+            Buffer (One)\n
+            {\n
+                0x01\n
+            },\n
+            "codec-id",\n
+            Buffer (0x04)\n
+            {\n
+                0x85, 0x08, 0xEC, 0x10\n
+            },\n
+            "layout-id",\n
+            Buffer (0x04)\n
+            {\n
+                0x75, 0x03, 0x00, 0x00\n
+            },\n
+            "device-type",\n
+            Buffer (0x10)\n
+            {\n
+                "Realtek ALC889A"\n
+            },\n
+            "PinConfigurations",\n
+            Buffer (0x28)\n
+            {\n
+                /* 0000 */    0x10, 0x90, 0xA1, 0x01, 0x20, 0x90, 0xA1, 0x02,\n
+                /* 0008 */    0x80, 0x30, 0x81, 0x01, 0x90, 0x40, 0x21, 0x02,\n
+                /* 0010 */    0x30, 0x40, 0x11, 0x01, 0x40, 0x40, 0x01, 0x01,\n
+                /* 0018 */    0x50, 0x60, 0x01, 0x01, 0x60, 0x20, 0x01, 0x01,\n
+                /* 0020 */    0x70, 0x61, 0x4B, 0x01, 0xA0, 0x01, 0xCB, 0x01\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+# Insert device GIGE into device with _ADR 0x001C0004
+# (for Gigabyte motherboards)
+#
+into device label GIGE parent_adr 0x001C0004 remove_entry;
+into device name_adr 0x001C0004 insert
+begin
+Device (GIGE)\n
+{\n
+Method (_DSM, 4, NotSerialized)\n
+                {\n
+                    Store (Package (0x04)\n
+                        {\n
+                            "model", \n
+                            Buffer (0x2A)\n
+                            {\n
+                                "Realtek RTL8111/8168B Gigabit Ethernet Controller"\n
+                            }, \n
+                            "built-in", \n
+                            Buffer (One)\n
+                            {\n
+                                0x00\n
+                            }\n
+                        }, Local0)\n
+                    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+                    Return (Local0)\n
+                }    \n
+Name (_ADR, Zero)\n
+    Name (_PRW, Package (0x02)\n
+    {\n
+        0x09,\n
+        0x03\n
+    })\n
+    Method (EWOL, 1, NotSerialized)\n
+    {\n
+        If (LEqual (Arg0, One))\n
+        {\n
+            Or (GP9, One, GP9)\n
+        }\n
+        Else\n
+        {\n
+            And (GP9, Zero, GP9)\n
+        }\n
+        If (LEqual (Arg0, GP9))\n
+        {\n
+            Return (Zero)\n
+        }\n
+        Else\n
+        {\n
+            Return (One)\n
+        }\n
+    }\n
+}
+end;
+into all code_regex
+(OperationRegion\s\(GPIO,\sSystemIO,\s0x\d+,\s)0x05(\)\s*\n[^\n]+\n\s*\{\s*\n)((?:[^\n]+\n){5}\s*\})
+replace_matched
+begin
+%10x06%2
+                       GP9,    1,\n%3
+end;
+# Change methods _STA and _CRS into device HPET (to avoid AppleIntelCPUPowerManagement panic)
+#
+into method label _STA parent_hid PNP0103 remove_entry;
+into device name_hid PNP0103 insert
+begin
+Method (_STA, 0, NotSerialized)\n
+{\n
+    Return (0x0F)\n
+}
+end;
+into method label _CRS parent_hid PNP0103 remove_entry;
+into device name_hid PNP0103 insert
+begin
+Method (_CRS, 0, NotSerialized)\n
+{\n
+    Return (ATT3)\n
+}
+end;
+# EHCI fix
+#
+into method label _DSM parent_adr 0x001D0007 remove_entry;
+into device name_adr 0x001D0007 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+Store (Package (0x04)\n
+{\n
+"AAPL,clock-id",\n
+Buffer (One)\n
+{\n
+0x01\n
+},\n
+"device_type",\n
+Buffer (0x05)\n
+{\n
+"EHCI"\n
+}\n
+}, Local0)\n
+DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001A0007 remove_entry;
+into device name_adr 0x001A0007 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+Store (Package (0x04)\n
+{\n
+"AAPL,clock-id",\n
+Buffer (One)\n
+{\n
+0x02\n
+},\n
+"device_type",\n
+Buffer (0x05)\n
+{\n
+"EHCI"\n
+}\n
+}, Local0)\n
+DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+Return (Local0)\n
+}
+end;
+# Change ID of USB devices to fake ICH10-R (sleep fix for ICH9)
+#
+into method label _DSM parent_adr 0x001D0000 remove_entry;
+into device name_adr 0x001D0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x34, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001D0001 remove_entry;
+into device name_adr 0x001D0001 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x35, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001D0002 remove_entry;
+into device name_adr 0x001D0002 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x36, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001A0000 remove_entry;
+into device name_adr 0x001A0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x37, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001A0001 remove_entry;
+into device name_adr 0x001A0001 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x38, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001A0002 remove_entry;
+into device name_adr 0x001A0002 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x39, 0x3A, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+# Remove IRQs from devices PIC, RTC and TMR, and add IRQs to device HPET
+#
+into device name_hid PNP0000 code_regex IRQNoFlags\s\(\)\n\s+\{(\d+)\} remove_matched;
+into device name_hid PNP0100 code_regex IRQNoFlags\s\(\)\n\s+\{(\d+)\} remove_matched;
+into device name_hid PNP0B00 code_regex IRQNoFlags\s\(\)\n\s+\{(\d+)\} remove_matched;
+into device name_hid PNP0103 code_regex_not IRQNoFlags code_regex Name\s\(([^,]+),\sResourceTemplate\s\(\)\n\s+\{((?:.|\n)*)\}\) replace_matched
+begin
+Name (%1, ResourceTemplate ()\n
+                    {\n
+                        IRQNoFlags ()\n
+                            {0}\n
+                        IRQNoFlags ()\n
+                            {8}\n
+%2
+})
+end;
+# Change ID of device with _ADR 0x001F0000 (LPC)
+#
+into method label _DSM parent_adr 0x001F0000 remove_entry;
+into device name_adr 0x001F0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package (0x02)\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x16, 0x29, 0x00, 0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+# Insert device SBUS into device PCI0
+#
+into device name_adr 0x001F0003 parent_label PCI0 remove_entry;
+into device label PCI0 insert
+begin
+Device (SBUS)\n
+{\n
+    Name (_ADR, 0x001F0003)\n
+    Device (BUS0)\n
+    {\n
+        Name (_CID, "smbus")\n
+        Name (_ADR, Zero)\n
+        Device (DVL0)\n
+        {\n
+            Name (_ADR, 0x57)\n
+            Name (_CID, "diagsvault")\n
+        }\n
+    }\n
+    Method (_DSM, 4, NotSerialized)\n
+    {\n
+        Store (Package (0x02)\n
+            {\n
+                "device-id", \n
+                Buffer (0x04)\n
+                {\n
+                    0x30, 0x3A, 0x00, 0x00\n
+                }\n
+            }, Local0)\n
+        DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+        Return (Local0)\n
+    }\n
+}
+end;
+# Change method _PTS where Arg0 is 0x05 (shutdown)
+#
+into method label _PTS code_regex (If\s*\(LEqual\s*\(Arg0,\s*0x05\)\)\s*\n\s*\{\s*\n)(?:[^\n\}]+\n)+(\s*\}) replace_matched
+begin
+%1
+            Store (Zero, SLPE)\n
+            Sleep (0x10)\n
+%2
+end;
+into method label \_PTS code_regex (If\s*\(LEqual\s*\(Arg0,\s*0x05\)\)\s*\n\s*\{\s*\n)(?:[^\n\}]+\n)+(\s*\}) replace_matched
+begin
+%1
+            Store (Zero, SLPE)\n
+            Sleep (0x10)\n
+%2
+end;
+into definitionblock code_regex . code_regex_not OperationRegion\s*\(PMRS insert
+begin
+OperationRegion (PMRS, SystemIO, 0x0430, One)\n
+Field (PMRS, ByteAcc, NoLock, Preserve)\n
+{\n
+        ,   4, \n
+    SLPE,   1\n
+}
+end;
+# Insert return into method _WAK to fix warning
+# (for Gigabyte motherboards)
+#
+into method label _WAK code_regex Return\s\(\s*\n?\s*Package\s*\n?\s*\(0x02\)\s*\n?\s*\{\s*\n?(?:\s*Zero,?\s*\n?){2}\s*\}\s*\n?\s*\) remove_matched;
+into method label _WAK insert
+begin
+Return (Package (0x02)\n
+{\n
+    Zero, \n
+    Zero\n
+})
+end;
+into method label \_WAK code_regex Return\s\(\s*\n?\s*Package\s*\n?\s*\(0x02\)\s*\n?\s*\{\s*\n?(?:\s*Zero,?\s*\n?){2}\s*\}\s*\n?\s*\) remove_matched;
+into method label \_WAK insert
+begin
+Return (Package (0x02)\n
+{\n
+    Zero, \n
+    Zero\n
+})
+end;
+into device label FWH set_label begin FWHD end;
+into device label MCH set_label begin MCEH end;
+into device label PIC set_label begin IPIC end;
+into device label DMAD set_label begin DMAC end;
+into device label TMR set_label begin TIMR end;
+into device label RTC0 set_label begin RTC end;
+into device label COPR set_label begin MATH end;
+into device label OMSC set_label begin LDRC end;
+into device label IDE1 set_label begin SATA end;
+into device label CHN0 set_label begin PRT0 end;
+into device label CHN1 set_label begin PRT1 end;
+into device label USB0 set_label begin UHC1 end;
+into device label USB1 set_label begin UHC2 end;
+into device label USB2 set_label begin UHC3 end;
+into device label US31 set_label begin UHC4 end;
+into device label USB4 set_label begin UHC5 end;
+into device label USB5 set_label begin UHC6 end;
+into device label USBE set_label begin EHC1 end;
+into device label USE2 set_label begin EHC2 end;
+into device label PX40 set_label begin LPCB end;
+into_all all code_regex DMAD replaceall_matched begin DMAC end;
+into_all all code_regex TMR replaceall_matched begin TIMR end;
+into_all all code_regex RTC0 replaceall_matched begin RTC end;
+into_all all code_regex COPR replaceall_matched begin MATH end;
+into_all all code_regex OMSC replaceall_matched begin LDRC end;
+into_all all code_regex CHN0 replaceall_matched begin PRT0 end;
+into_all all code_regex CHN1 replaceall_matched begin PRT1 end;
+into_all all code_regex PX40 replaceall_matched begin LPCB end;
+into_all all code_regex USB0 replaceall_matched begin UHC1 end;
+into_all all code_regex USB1 replaceall_matched begin UHC2 end;
+into_all all code_regex USB2 replaceall_matched begin UHC3 end;
+into_all all code_regex US31 replaceall_matched begin UHC4 end;
+into_all all code_regex USB4 replaceall_matched begin UHC5 end;
+into_all all code_regex USB5 replaceall_matched begin UHC6 end;
+into_all all code_regex USBE replaceall_matched begin EHC1 end;
+into_all all code_regex USE2 replaceall_matched begin EHC2 end;
+into device name_adr 0x001E0000 set_label
+begin
+PCIB
+end;
+into_all all code_regex HUB0 replaceall_matched
+begin
+PCIB
+end;
+# Change the length of IO segment in device RTC to 0x02 (fix CMOS reset)
+#
+into device name_hid PNP0B00 code_regex (IO\s\((?:\s*[^,]+,\s*(?:\/\/\s.*)?\s*\n)+\s*)(\dx\d+)(,\s*(?:\/\/\s.*)?\s*\n\s*\)) replace_matched begin %10x02%3 end

@@ -1,0 +1,84 @@
+into method label _DSM parent_adr 0x001D0000 remove_entry;
+into device name_adr 0x001D0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package ()\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x34, 0x3B, 0x00, 0x00\n
+            }, \n
+            "built-in", \n
+            Buffer (One)\n
+            {\n
+                0x00\n
+            }, \n
+            "AAPL,clock-id", \n
+            Buffer (One)\n
+            {\n
+                0x01\n
+            }, \n
+            "device_type", \n
+            Buffer (0x05)\n
+            {\n
+                "EHCI"\n
+            }, \n
+            "AAPL,current-available", \n
+            0x04B0, \n
+            "AAPL,current-extra", \n
+            0x02BC, \n
+            "AAPL,current-in-sleep", \n
+            0x03E8, \n
+            Buffer (One)\n
+            {\n
+                0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end;
+into method label _DSM parent_adr 0x001A0000 remove_entry;
+into device name_adr 0x001A0000 insert
+begin
+Method (_DSM, 4, NotSerialized)\n
+{\n
+    Store (Package ()\n
+        {\n
+            "device-id", \n
+            Buffer (0x04)\n
+            {\n
+                0x34, 0x3B, 0x00, 0x00\n
+            }, \n
+            "built-in", \n
+            Buffer (One)\n
+            {\n
+                0x00\n
+            }, \n
+            "AAPL,clock-id", \n
+            Buffer (One)\n
+            {\n
+                0x02\n
+            }, \n
+            "device_type", \n
+            Buffer (0x05)\n
+            {\n
+                "EHCI"\n
+            }, \n
+            "AAPL,current-available", \n
+            0x04B0, \n
+            "AAPL,current-extra", \n
+            0x02BC, \n
+            "AAPL,current-in-sleep", \n
+            0x03E8, \n
+            Buffer (One)\n
+            {\n
+                0x00\n
+            }\n
+        }, Local0)\n
+    DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+    Return (Local0)\n
+}
+end

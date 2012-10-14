@@ -1,0 +1,83 @@
+# Insert device GFX0 into device with _ADR 0x00010000
+#
+into device name_adr Zero parent_adr 0x00010000 remove_entry;
+into device name_adr 0x00010000 insert
+begin
+Device (GFX0)\n
+{\n
+    Name (_ADR, Zero)\n
+    Method (_DSM, 4, NotSerialized)\n
+    {\n
+        Store (Package (0x18)\n
+            {\n
+                "@0,compatible", \n
+                Buffer (0x0B)\n
+                {\n
+                    "NVDA,NVMac"\n
+                }, \n
+                "@0,device_type", \n
+                Buffer (0x08)\n
+                {\n
+                    "display"\n
+                }, \n
+                "@0,name", \n
+                Buffer (0x0F)\n
+                {\n
+                    "NVDA,Display-A"\n
+                }, \n
+                "@1,compatible", \n
+                Buffer (0x0B)\n
+                {\n
+                    "NVDA,NVMac"\n
+                }, \n
+                "@1,device_type", \n
+                Buffer (0x08)\n
+                {\n
+                    "display"\n
+                }, \n
+                "@1,name", \n
+                Buffer (0x0F)\n
+                {\n
+                    "NVDA,Display-B"\n
+                }, \n
+                "NVCAP", \n
+                Buffer (0x14)\n
+                {\n
+                    /* 0000 */    0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, \n
+                    /* 0008 */    0x1C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A, \n
+                    /* 0010 */    0x00, 0x00, 0x00, 0x00\n
+                }, \n
+                "NVPM", \n
+                Buffer (0x1C)\n
+                {\n
+                    /* 0000 */    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \n
+                    /* 0008 */    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \n
+                    /* 0010 */    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \n
+                    /* 0018 */    0x00, 0x00, 0x00, 0x00\n
+                }, \n
+                "VRAM,totalsize", \n
+                Buffer (0x04)\n
+                {\n
+                    0x00, 0x00, 0x00, 0x20\n
+                }, \n
+                "device_type", \n
+                Buffer (0x0C)\n
+                {\n
+                    "NVDA,Parent"\n
+                }, \n
+                "model", \n
+                Buffer (0x18)\n
+                {\n
+                    "nVidia GeForce 9800 GTX"\n
+                }, \n
+                "rom-revision", \n
+                Buffer (0x26)\n
+                {\n
+                    "nVidia GeForce 9800 GTX OpenGL Engine"\n
+                }\n
+            }, Local0)\n
+        DTGP (Arg0, Arg1, Arg2, Arg3, RefOf (Local0))\n
+        Return (Local0)\n
+    }\n
+}
+end
